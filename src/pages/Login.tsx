@@ -19,6 +19,9 @@ import {logoDiscord, logoTwitter,logoYoutube} from "ionicons/icons";
 import usePersistentState from '../hooks/usePersistentState';
 import meLogo from '../images/me.png';
 
+import { getBalanceOf } from "../util/getBalance";
+import TokenABI from "../abi/TokenABI.json"; 
+
 /**
  * The "Login" page to which all unauthenticated users are redirected to
  *
@@ -48,6 +51,11 @@ function Login() {
     const [code,setCode] = useState(urlCode);
     const [next,setNext] = useState(nextUrl);
 
+    const [buttonTitle, setButtonTitle] = useState("Buy 1 NFT to gain access");
+    const contractAddress = "0xb2ea51BAa12C461327d12A2069d47b30e680b69D"; 
+    const userAddress = "0x248dd3836e2a8b56279c04addc2d11f3c2497836"; 
+  
+
     // loading state which stores whether an access token is being issued or not
     const [loading, setLoading] = useState(!!code);
 
@@ -59,6 +67,20 @@ function Login() {
 
     const isMobileDevice = useMemo(() => isPlatform("mobile"), []);
 
+    const checkBalance = async () => {
+        try {
+        setButtonTitle("Fetching...");
+          const balance = await getBalanceOf(contractAddress, TokenABI, userAddress);
+          setButtonTitle(`Balance: ${Number(balance).toFixed(2)} SMCW`);
+        } catch (error) {
+          setButtonTitle("Error fetching balance");
+        }
+    };
+    
+    useEffect(() => {
+        checkBalance();
+    }, []); 
+      
     useEffect(() => {
         if (code && !error && !user) {
             // exchange authorization code given by discord for an access token which we can sign in with using firebase
@@ -189,7 +211,7 @@ function Login() {
                                     </div>
                                     <IonButton className='buy-nft-btn mt-4 h-11'color='medium' onClick={()=> window.open('https://magiceden.io/marketplace/soldecoder', "_blank")}>
                                         <img src={meLogo} className="me-logo mr-2"/>
-                                        Buy 1 NFT to gain access
+                                        {buttonTitle}
                                     </IonButton>
                                     <IonButton className='buy-nft-btn mt-3 h-11' color='medium' onClick={()=> window.open('https://discord.gg/sol-decoder', "_blank")}>
                                         { <IonIcon icon={logoDiscord} className="big-emoji mr-2"/>}
